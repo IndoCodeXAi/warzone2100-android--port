@@ -1,0 +1,49 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace "net.wz2100.app"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "net.wz2100.app"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "0.1-android-scaffold"
+        ndk {
+            // Single-arch for now; add more ABIs later once arm64-v8a works.
+            abiFilters "arm64-v8a"
+        }
+    }
+
+    sourceSets {
+        main {
+            // libmain.so is built OUTSIDE Gradle (via vcpkg + CMake in the
+            // GitHub Actions workflow) and copied here before this module
+            // is assembled. There is no externalNativeBuild block on purpose.
+            jniLibs.srcDirs = ['src/main/jniLibs']
+            assets.srcDirs = ['src/main/assets']
+        }
+    }
+
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+        }
+    }
+
+    // Debug build only for now: no release signing config yet.
+    // (Needed only when/if this moves past the scaffold stage.)
+}
+
+dependencies {
+    // SDL3's Java glue (org.libsdl.app.*) is vendored directly into
+    // src/main/java by the CI workflow (cloned from the SDL3 source tree),
+    // not pulled as a Maven dependency — SDL does not publish one.
+}
