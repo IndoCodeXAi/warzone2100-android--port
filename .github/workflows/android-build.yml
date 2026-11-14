@@ -52,6 +52,34 @@ jobs:
           "$SDKMANAGER_PATH" --install "platform-tools" "platforms;android-34" "ndk;26.3.11579264"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.3.11579264" >> "$GITHUB_ENV"
 
+      - name: Preflight — verify overlay-port patch files exist in the checkout
+        # This exists ONLY to turn a vague vcpkg error into a clear yes/no
+        # answer about whether these files actually made it into the repo.
+        # If this step fails, the problem is 100% in how the repo was
+        # pushed/uploaded, not in the workflow or in vcpkg.
+        run: |
+          MISSING=0
+          for f in \
+            ".ci/vcpkg/overlay-ports/basisu/export-cmake-config.diff" \
+            ".ci/vcpkg/overlay-ports/openal-soft/pkgconfig-cxx.diff" \
+            ".ci/vcpkg/overlay-ports/angle/001-fix-builder-error.patch" \
+            ".ci/vcpkg/overlay-ports/protobuf/fix-arm64-llvm-win.patch" \
+          ; do
+            if [ -f "$f" ]; then
+              echo "OK   found: $f ($(wc -c < "$f") bytes)"
+            else
+              echo "MISSING: $f"
+              MISSING=1
+            fi
+          done
+          if [ "$MISSING" = "1" ]; then
+            echo ""
+            echo "::error::One or more vcpkg overlay-port patch files are missing from this checkout."
+            echo "This means the .ci/ folder in the GitHub repo itself is incomplete —"
+            echo "open the repo in a browser (not an app) and check these exact paths by hand."
+            exit 1
+          fi
+
       - name: Bootstrap vcpkg
         run: |
           git clone https://github.com/microsoft/vcpkg.git "$HOME/vcpkg"
