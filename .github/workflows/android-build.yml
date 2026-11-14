@@ -86,8 +86,10 @@ jobs:
           "$HOME/vcpkg/bootstrap-vcpkg.sh"
           echo "VCPKG_ROOT=$HOME/vcpkg" >> "$GITHUB_ENV"
 
-      - name: Install Ninja
-        run: sudo apt-get update && sudo apt-get install -y ninja-build
+      - name: Install host build tools (Ninja + autotools for vcpkg ports like libsodium)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build autoconf autoconf-archive automake libtool
 
       - name: Configure (CMake + vcpkg Android triplet)
         run: |
